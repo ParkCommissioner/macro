@@ -1,0 +1,331 @@
+@import "tailwindcss";
+
+:root {
+  /* Background layers */
+  --bg-base: #050505;
+  --bg-elevated: #0d0d0d;
+  --bg-overlay: #141414;
+
+  /* Text */
+  --text-primary: #e4e4e7;
+  --text-secondary: #71717a;
+  --text-muted: #3f3f46;
+
+  /* Accent - Terminal Green */
+  --accent: #22c55e;
+  --accent-dim: #16a34a;
+  --accent-glow: rgba(34, 197, 94, 0.15);
+  --accent-bright: #4ade80;
+
+  /* Macro colors */
+  --protein: #60a5fa;
+  --carbs: #fbbf24;
+  --fat: #f87171;
+  --fiber: #a78bfa;
+
+  /* Semantic */
+  --error: #f87171;
+  --warning: #fbbf24;
+  --success: #22c55e;
+
+  /* Legacy compatibility */
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Base styles */
+html {
+  font-size: 15px;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-mono), 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* Safe area padding for iOS */
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-pl {
+  padding-left: env(safe-area-inset-left, 0);
+}
+
+.safe-area-pr {
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Terminal scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-dim);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Hide scrollbar option */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tabular numbers for data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Monospace enforced */
+.mono {
+  font-family: var(--font-mono), 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+}
+
+/* Skeleton animation - terminal scan line style */
+@keyframes scan {
+  0% {
+    background-position: 0 -100%;
+  }
+  100% {
+    background-position: 0 200%;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    180deg,
+    var(--bg-elevated) 0%,
+    var(--bg-elevated) 40%,
+    var(--accent-glow) 50%,
+    var(--bg-elevated) 60%,
+    var(--bg-elevated) 100%
+  );
+  background-size: 100% 200%;
+  animation: scan 1.5s ease-in-out infinite;
+  border: 1px solid var(--bg-overlay);
+}
+
+/* Glow effects */
+.glow {
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.glow-sm {
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.glow-text {
+  text-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Focus glow ring */
+.focus-glow:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-glow), inset 0 0 20px var(--accent-glow);
+  border-color: var(--accent);
+}
+
+/* Confidence levels */
+.confidence-high {
+  border-style: solid;
+  opacity: 1;
+}
+
+.confidence-medium {
+  opacity: 0.85;
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.confidence-low {
+  border-style: dashed;
+  opacity: 0.7;
+  box-shadow: 0 0 25px var(--accent-glow);
+}
+
+/* Terminal cursor blink */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink::after {
+  content: '_';
+  animation: blink 0.8s step-end infinite;
+  color: var(--accent);
+}
+
+/* Input autofill styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary);
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-elevated) inset;
+  transition: background-color 5000s ease-in-out 0s;
+  font-family: inherit;
+}
+
+/* Terminal section header */
+.section-header {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.section-header::before {
+  content: '> ';
+  color: var(--accent);
+}
+
+/* Card base style */
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-overlay);
+  border-radius: 12px;
+}
+
+.card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bg-overlay);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Terminal input style */
+.terminal-input {
+  background: var(--bg-base);
+  border: 1px solid var(--bg-overlay);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.terminal-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow), inset 0 0 30px var(--accent-glow);
+  outline: none;
+}
+
+.terminal-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Button styles */
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg-base);
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-bright);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  background: var(--bg-overlay);
+  color: var(--text-muted);
+}
+
+/* Pulse animation for loading */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Macro color utilities */
+.text-protein { color: var(--protein); }
+.text-carbs { color: var(--carbs); }
+.text-fat { color: var(--fat); }
+.text-fiber { color: var(--fiber); }
+
+.bg-protein { background-color: var(--protein); }
+.bg-carbs { background-color: var(--carbs); }
+.bg-fat { background-color: var(--fat); }
+.bg-fiber { background-color: var(--fiber); }
+
+/* Grid overlay for charts */
+.grid-overlay {
+  background-image:
+    linear-gradient(var(--bg-overlay) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-overlay) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Number display */
+.number-display {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Animate in */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+/* Selection color */
+::selection {
+  background: var(--accent);
+  color: var(--bg-base);
+}
