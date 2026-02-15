@@ -153,8 +153,8 @@ export function DailySnapshot({ data }: { data: SnapshotData }) {
         <div
           ref={cardRef}
           style={{
-            width: 390,
-            padding: 28,
+            width: 440,
+            padding: 32,
             backgroundColor: '#050505',
             color: '#e4e4e7',
             fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -163,17 +163,17 @@ export function DailySnapshot({ data }: { data: SnapshotData }) {
           }}
         >
           {/* Header */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>{formatDateLong(data.date)}</div>
-            <div style={{ fontSize: 12, color: '#3f3f46', marginTop: 2 }}>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>{formatDateLong(data.date)}</div>
+            <div style={{ fontSize: 13, color: '#3f3f46', marginTop: 4 }}>
               {data.entry_count} {data.entry_count === 1 ? 'meal' : 'meals'} logged
             </div>
           </div>
 
           {/* Calories */}
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#3f3f46' }}>calories</div>
-            <div style={{ fontSize: 40, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 4 }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#3f3f46' }}>calories</div>
+            <div style={{ fontSize: 44, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 6 }}>
               {showRange ? (
                 <>{Math.round(totals.calories.min)}<span style={{ color: '#3f3f46' }}>-</span>{Math.round(totals.calories.max)}</>
               ) : (
@@ -184,18 +184,18 @@ export function DailySnapshot({ data }: { data: SnapshotData }) {
           </div>
 
           {/* Ring + Legend */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 28, marginBottom: 24, justifyContent: 'center' }}>
             <StaticMacroRing protein={totals.protein.mid} carbs={totals.carbs.mid} fat={totals.fat.mid} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 { label: 'protein', value: totals.protein.mid, color: '#60a5fa' },
                 { label: 'carbs', value: totals.carbs.mid, color: '#fbbf24' },
                 { label: 'fat', value: totals.fat.mid, color: '#f87171' },
               ].map((m) => (
-                <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: m.color }} />
-                  <span style={{ fontSize: 11, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', width: 52 }}>{m.label}</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: m.color }} />
+                  <span style={{ fontSize: 12, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', width: 58 }}>{m.label}</span>
+                  <span style={{ fontSize: 16, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                     {Math.round(m.value)}<span style={{ color: '#3f3f46', fontWeight: 400 }}>g</span>
                   </span>
                 </div>
@@ -205,15 +205,15 @@ export function DailySnapshot({ data }: { data: SnapshotData }) {
 
           {/* Meals list */}
           {data.entries.length > 0 && (
-            <div style={{ borderTop: '1px solid #141414', paddingTop: 14 }}>
-              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#3f3f46', marginBottom: 8 }}>meals</div>
+            <div style={{ borderTop: '1px solid #141414', paddingTop: 16 }}>
+              <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#3f3f46', marginBottom: 10 }}>meals</div>
               {data.entries.map((entry, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '5px 0', fontSize: 13 }}>
-                  <div style={{ display: 'flex', gap: 8, flex: 1, minWidth: 0 }}>
-                    <span style={{ color: '#3f3f46', fontSize: 11, flexShrink: 0 }}>[{formatTime(entry.timestamp)}]</span>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '7px 0', fontSize: 14, lineHeight: 1.4 }}>
+                  <div style={{ display: 'flex', gap: 10, flex: 1, minWidth: 0 }}>
+                    <span style={{ color: '#3f3f46', fontSize: 12, flexShrink: 0 }}>[{formatTime(entry.timestamp)}]</span>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.raw_text}</span>
                   </div>
-                  <span style={{ color: '#71717a', fontVariantNumeric: 'tabular-nums', flexShrink: 0, marginLeft: 8, fontSize: 12 }}>
+                  <span style={{ color: '#71717a', fontVariantNumeric: 'tabular-nums', flexShrink: 0, marginLeft: 12, fontSize: 13 }}>
                     {Math.round(entry.totals.calories.mid)} kcal
                   </span>
                 </div>
