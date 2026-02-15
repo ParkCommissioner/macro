@@ -7,6 +7,7 @@ import { FoodInput } from '@/components/FoodInput';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { MacroRing, MacroLegend } from '@/components/MacroRing';
 import { EntryCard } from '@/components/EntryCard';
+import { DailySnapshot } from '@/components/DailySnapshot';
 
 interface NutritionalRange {
   min: number;
@@ -126,11 +127,14 @@ export default function TodayPage() {
         <h1 className="text-xl font-bold text-[var(--text-primary)]">
           {data?.date ? formatDate(data.date) : 'today'}
         </h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          {data?.entry_count === 0
-            ? 'no meals logged yet'
-            : `${data?.entry_count} ${data?.entry_count === 1 ? 'meal' : 'meals'} logged`}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-[var(--text-muted)]">
+            {data?.entry_count === 0
+              ? 'no meals logged yet'
+              : `${data?.entry_count} ${data?.entry_count === 1 ? 'meal' : 'meals'} logged`}
+          </p>
+          {data && data.entry_count > 0 && <DailySnapshot data={data} />}
+        </div>
       </motion.div>
 
       {/* Food Input - Always visible at top */}
