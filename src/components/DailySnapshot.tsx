@@ -211,10 +211,10 @@ export function DailySnapshot({ data }: { data: SnapshotData }) {
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '7px 0', fontSize: 14, lineHeight: 1.4 }}>
                   <div style={{ display: 'flex', gap: 10, flex: 1, minWidth: 0 }}>
                     <span style={{ color: '#3f3f46', fontSize: 12, flexShrink: 0 }}>[{formatTime(entry.timestamp)}]</span>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.raw_text}</span>
+                    <span style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{entry.raw_text}</span>
                   </div>
                   <span style={{ color: '#71717a', fontVariantNumeric: 'tabular-nums', flexShrink: 0, marginLeft: 12, fontSize: 13 }}>
-                    {Math.round(entry.totals.calories.mid)} kcal
+                    {Math.round(entry.totals.calories.mid)}
                   </span>
                 </div>
               ))}
