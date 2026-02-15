@@ -77,6 +77,7 @@ export function EntryCard({
   onDeleteItem,
 }: EntryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [confirmDeleteItemId, setConfirmDeleteItemId] = useState<string | null>(null);
 
   const proteinMid = totals.protein.mid;
   const carbsMid = totals.carbs.mid;
@@ -197,34 +198,78 @@ export function EntryCard({
           >
             <div className="space-y-0 divide-y divide-[var(--bg-overlay)]">
               {items.map((item) => (
-                <div key={item.id} className="flex items-start justify-between gap-2 px-3 py-2.5 bg-[var(--bg-base)]">
-                  <div className="flex-1">
-                    <p className="text-sm text-[var(--text-primary)]">{item.name}</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <ConfidenceIndicator confidence={item.confidence} />
-                      <span className="text-[10px] tabular-nums text-[var(--text-muted)]">
-                        {Math.round(item.protein.mid)}P · {Math.round(item.carbs.mid)}C · {Math.round(item.fat.mid)}F
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="text-right text-sm tabular-nums text-[var(--text-secondary)]">
-                      {Math.round(item.calories.mid)}
-                      <span className="text-[var(--text-muted)]"> kcal</span>
-                    </div>
-                    {onDeleteItem && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
-                        className="ml-1 rounded p-0.5 text-[var(--text-muted)] transition-colors hover:text-[var(--error)]"
-                        title="Remove item"
+                <div key={item.id} className="bg-[var(--bg-base)]">
+                  <AnimatePresence mode="wait">
+                    {confirmDeleteItemId === item.id ? (
+                      <motion.div
+                        key="confirm"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center justify-between px-3 py-2.5"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="6" x2="6" y2="18" />
-                          <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                      </button>
+                        <p className="text-xs text-[var(--text-secondary)]">
+                          remove <span className="text-[var(--text-primary)]">{item.name}</span>?
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteItemId(null); }}
+                            className="rounded px-2 py-1 text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
+                          >
+                            cancel
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmDeleteItemId(null);
+                              onDeleteItem?.(item.id);
+                            }}
+                            className="rounded bg-[var(--error)]/10 px-2 py-1 text-xs text-[var(--error)] transition-colors hover:bg-[var(--error)]/20"
+                          >
+                            remove
+                          </button>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="item"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center justify-between gap-2 px-3 py-2.5"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm text-[var(--text-primary)]">{item.name}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <ConfidenceIndicator confidence={item.confidence} />
+                            <span className="text-[10px] tabular-nums text-[var(--text-muted)]">
+                              {Math.round(item.protein.mid)}P · {Math.round(item.carbs.mid)}C · {Math.round(item.fat.mid)}F
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-right text-sm tabular-nums text-[var(--text-secondary)]">
+                            {Math.round(item.calories.mid)}
+                            <span className="text-[var(--text-muted)]"> kcal</span>
+                          </div>
+                          {onDeleteItem && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteItemId(item.id); }}
+                              className="rounded p-1 text-[var(--text-muted)] transition-colors hover:bg-[var(--error)]/10 hover:text-[var(--error)]"
+                              title="Remove item"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
