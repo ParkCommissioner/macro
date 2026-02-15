@@ -98,6 +98,7 @@ export default function LogPage() {
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const loadData = useCallback(async (offset = 0, append = false) => {
@@ -164,6 +165,28 @@ export default function LogPage() {
       setError(err instanceof Error ? err.message : 'Failed to delete entry');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleDeleteItem = async (entryId: string, itemId: string) => {
+    if (deletingItemId) return;
+
+    setDeletingItemId(itemId);
+    try {
+      await api.entries.deleteItem(entryId, itemId);
+      setEntries((prev) => {
+        const updated = prev.map((e) => {
+          if (e.id !== entryId) return e;
+          const newItems = e.items.filter((i) => i.id !== itemId);
+          return { ...e, items: newItems };
+        });
+        // Remove entries with no items left
+        return updated.filter((e) => e.items.length > 0);
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete item');
+    } finally {
+      setDeletingItemId(null);
     }
   };
 
@@ -241,6 +264,7 @@ export default function LogPage() {
                         totals={aggregateItemTotals(entry.items)}
                         items={entry.items}
                         onDelete={() => handleDelete(entry.id)}
+                        onDeleteItem={(itemId) => handleDeleteItem(entry.id, itemId)}
                       />
                     </motion.div>
                   ))}

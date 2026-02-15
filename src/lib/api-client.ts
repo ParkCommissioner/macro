@@ -214,6 +214,9 @@ export const api = {
       }),
 
     delete: (id: string) => apiClient<void>(`/entries/${id}`, { method: 'DELETE' }),
+
+    deleteItem: (entryId: string, itemId: string) =>
+      apiClient<void>(`/entries/${entryId}/items/${itemId}`, { method: 'DELETE' }),
   },
 
   dashboard: {

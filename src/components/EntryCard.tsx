@@ -36,6 +36,7 @@ interface EntryCardProps {
   itemCount?: number;
   onDelete?: () => void;
   onEdit?: () => void;
+  onDeleteItem?: (itemId: string) => void;
 }
 
 function formatTime(timestamp: string): string {
@@ -73,6 +74,7 @@ export function EntryCard({
   itemCount,
   onDelete,
   onEdit,
+  onDeleteItem,
 }: EntryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -205,9 +207,23 @@ export function EntryCard({
                       </span>
                     </div>
                   </div>
-                  <div className="text-right text-sm tabular-nums text-[var(--text-secondary)]">
-                    {Math.round(item.calories.mid)}
-                    <span className="text-[var(--text-muted)]"> kcal</span>
+                  <div className="flex items-start gap-2">
+                    <div className="text-right text-sm tabular-nums text-[var(--text-secondary)]">
+                      {Math.round(item.calories.mid)}
+                      <span className="text-[var(--text-muted)]"> kcal</span>
+                    </div>
+                    {onDeleteItem && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
+                        className="ml-1 rounded p-0.5 text-[var(--text-muted)] transition-colors hover:text-[var(--error)]"
+                        title="Remove item"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
