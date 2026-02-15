@@ -108,11 +108,27 @@ export function EntryCard({
         <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
           [{formatTime(timestamp)}]
         </span>
-        {(itemCount !== undefined || items) && (
-          <span className="text-[10px] tabular-nums text-[var(--text-muted)]">
-            {itemCount ?? items?.length} item{(itemCount ?? items?.length) !== 1 ? 's' : ''}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {(itemCount !== undefined || items) && (
+            <span className="text-[10px] tabular-nums text-[var(--text-muted)]">
+              {itemCount ?? items?.length} item{(itemCount ?? items?.length) !== 1 ? 's' : ''}
+            </span>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="rounded p-0.5 text-[var(--text-muted)] transition-colors hover:text-[var(--error)]"
+              title="Delete entry"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Card body */}

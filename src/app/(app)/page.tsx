@@ -86,6 +86,7 @@ export default function TodayPage() {
   const [data, setData] = useState<TodayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -105,6 +106,19 @@ export default function TodayPage() {
 
   const handleEntryCreated = () => {
     loadData();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
+    try {
+      await api.entries.delete(id);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete entry');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -207,6 +221,7 @@ export default function TodayPage() {
                       timestamp={entry.timestamp}
                       totals={entry.totals}
                       itemCount={entry.item_count}
+                      onDelete={() => handleDelete(entry.id)}
                     />
                   </motion.div>
                 ))}
