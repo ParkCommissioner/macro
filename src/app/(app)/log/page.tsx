@@ -268,7 +268,7 @@ export default function LogPage() {
                 <h2 className="section-header">
                   {formatDateHeading(date)}
                 </h2>
-                <DailySnapshot data={buildSnapshotData(date, entriesByDate[date])} />
+                <DailySnapshot data={buildSnapshotData(date, entriesByDate[date])} compact />
               </div>
               <div className="space-y-3">
                 <AnimatePresence mode="popLayout">

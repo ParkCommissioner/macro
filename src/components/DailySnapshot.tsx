@@ -82,7 +82,7 @@ function formatDateLong(dateStr: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
-export function DailySnapshot({ data }: { data: SnapshotData }) {
+export function DailySnapshot({ data, compact = false }: { data: SnapshotData; compact?: boolean }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
 
@@ -138,14 +138,18 @@ export function DailySnapshot({ data }: { data: SnapshotData }) {
       <button
         onClick={handleShare}
         disabled={sharing}
-        className="flex items-center gap-1.5 rounded-md border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] disabled:opacity-40"
+        className={compact
+          ? "flex items-center justify-center rounded-md border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] p-2 text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)] disabled:opacity-40"
+          : "flex items-center gap-1.5 rounded-md border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)] disabled:opacity-40"
+        }
+        title="Share daily snapshot"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={compact ? 16 : 14} height={compact ? 16 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
           <polyline points="16 6 12 2 8 6" />
           <line x1="12" y1="2" x2="12" y2="15" />
         </svg>
-        {sharing ? 'generating...' : 'share snapshot'}
+        {!compact && <span>{sharing ? 'generating...' : 'share snapshot'}</span>}
       </button>
 
       {/* Hidden card for capture */}
