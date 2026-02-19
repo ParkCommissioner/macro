@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/lib/api-client';
 import { EntryCard } from '@/components/EntryCard';
+import { DailySnapshot } from '@/components/DailySnapshot';
 
 interface NutritionalRange {
   min: number;
@@ -202,6 +203,23 @@ export default function LogPage() {
 
   const sortedDates = Object.keys(entriesByDate).sort((a, b) => b.localeCompare(a));
 
+  function buildSnapshotData(date: string, dayEntries: Entry[]) {
+    const allItems = dayEntries.flatMap((e) => e.items);
+    const totals = aggregateItemTotals(allItems);
+    return {
+      date,
+      totals,
+      entries: dayEntries.map((e) => ({
+        id: e.id,
+        raw_text: e.raw_text,
+        timestamp: e.timestamp,
+        totals: aggregateItemTotals(e.items),
+        item_count: e.items.length,
+      })),
+      entry_count: dayEntries.length,
+    };
+  }
+
   return (
     <div className="mx-auto max-w-lg px-4 py-6 safe-area-pt">
       {/* Header */}
@@ -246,9 +264,12 @@ export default function LogPage() {
         >
           {sortedDates.map((date) => (
             <div key={date}>
-              <h2 className="section-header mb-3">
-                {formatDateHeading(date)}
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="section-header">
+                  {formatDateHeading(date)}
+                </h2>
+                <DailySnapshot data={buildSnapshotData(date, entriesByDate[date])} />
+              </div>
               <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
                   {entriesByDate[date].map((entry) => (
