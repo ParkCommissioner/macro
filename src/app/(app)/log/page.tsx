@@ -132,11 +132,14 @@ export default function LogPage() {
   }, [loadData]);
 
   // Infinite scroll
+  const entriesLengthRef = useRef(0);
+  entriesLengthRef.current = entries.length;
+
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
-          loadData(entries.length, true);
+      (observerEntries) => {
+        if (observerEntries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
+          loadData(entriesLengthRef.current, true);
         }
       },
       { threshold: 0.1 }
@@ -152,7 +155,7 @@ export default function LogPage() {
         observer.unobserve(currentRef);
       }
     };
-  }, [hasMore, isLoadingMore, isLoading, loadData, entries.length]);
+  }, [hasMore, isLoadingMore, isLoading, loadData]);
 
   const handleDelete = async (id: string) => {
     if (deletingId) return;
