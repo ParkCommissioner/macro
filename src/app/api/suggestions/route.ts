@@ -19,7 +19,8 @@ async function getSuggestions(
 ): Promise<NextResponse<SuggestionsResponse | APIErrorResponse>> {
   try {
     const { searchParams } = new URL(req.url);
-    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '5', 10), 1), 20);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10), 1), 20);
+    const query = (searchParams.get('q') || '').trim().toLowerCase();
 
     const supabase = getSupabaseClient();
 
@@ -62,14 +63,15 @@ async function getSuggestions(
       }
     }
 
-    // Sort by last_used descending and take limit
+    // Filter by query if provided, sort by use_count descending (most popular first)
     const suggestions: SuggestionRow[] = Array.from(suggestionMap.entries())
       .map(([raw_text, data]) => ({
         raw_text,
         last_used: data.last_used,
         use_count: data.use_count,
       }))
-      .sort((a, b) => b.last_used.localeCompare(a.last_used))
+      .filter((s) => !query || s.raw_text.toLowerCase().includes(query))
+      .sort((a, b) => b.use_count - a.use_count)
       .slice(0, limit);
 
     return NextResponse.json({ suggestions });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/lib/api-client';
 
@@ -14,6 +14,15 @@ interface FoodInputProps {
   onEntryCreated?: () => void;
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 export function FoodInput({ onEntryCreated }: FoodInputProps) {
   const [value, setValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,17 +32,26 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const loadSuggestions = async () => {
-      try {
-        const data = await api.suggestions.list(5);
-        setSuggestions(data.suggestions);
-      } catch {
-        // Ignore
-      }
-    };
-    loadSuggestions();
+  const debouncedQuery = useDebounce(value, 250);
+
+  const loadSuggestions = useCallback(async (q?: string) => {
+    try {
+      const data = await api.suggestions.list({ limit: 8, q: q || undefined });
+      setSuggestions(data.suggestions);
+    } catch {
+      // Ignore
+    }
   }, []);
+
+  // Load initial suggestions (most popular)
+  useEffect(() => {
+    loadSuggestions();
+  }, [loadSuggestions]);
+
+  // Filter suggestions as user types (debounced)
+  useEffect(() => {
+    loadSuggestions(debouncedQuery || undefined);
+  }, [debouncedQuery, loadSuggestions]);
 
   const handleSubmit = async (text: string = value) => {
     if (!text.trim() || isSubmitting) return;
@@ -45,8 +63,7 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
       await api.entries.create(text.trim());
       setValue('');
       onEntryCreated?.();
-      const data = await api.suggestions.list(5);
-      setSuggestions(data.suggestions);
+      loadSuggestions();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add entry');
     } finally {
@@ -59,7 +76,14 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
       e.preventDefault();
       handleSubmit();
     }
+    if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
   };
+
+  const filteredSuggestions = suggestions.filter(
+    (s) => !value || s.raw_text.toLowerCase() !== value.toLowerCase()
+  );
 
   return (
     <div className="relative w-full">
@@ -103,23 +127,26 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
         </motion.button>
       </div>
 
-      {/* Suggestions */}
+      {/* Suggestions dropdown */}
       <AnimatePresence>
-        {showSuggestions && suggestions.length > 0 && !value && (
+        {showSuggestions && filteredSuggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-xl border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] shadow-xl"
+            className="absolute left-0 right-0 top-full z-10 mt-2 max-h-64 overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] shadow-xl"
           >
             <div className="px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
-              Recent
+              {value ? 'Matches' : 'Popular'}
             </div>
-            {suggestions.map((suggestion, i) => (
+            {filteredSuggestions.map((suggestion, i) => (
               <button
                 key={i}
-                onClick={() => handleSubmit(suggestion.raw_text)}
+                onClick={() => {
+                  setValue(suggestion.raw_text);
+                  handleSubmit(suggestion.raw_text);
+                }}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-[var(--bg-overlay)]"
               >
                 <span className="flex-1 truncate text-[var(--text-primary)]">{suggestion.raw_text}</span>

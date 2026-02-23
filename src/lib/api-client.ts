@@ -285,13 +285,18 @@ export const api = {
   },
 
   suggestions: {
-    list: (limit?: number) =>
-      apiClient<{
+    list: (params?: { limit?: number; q?: string }) => {
+      const searchParams = new URLSearchParams();
+      if (params?.limit) searchParams.set('limit', String(params.limit));
+      if (params?.q) searchParams.set('q', params.q);
+      const qs = searchParams.toString();
+      return apiClient<{
         suggestions: Array<{
           raw_text: string;
           last_used: string;
           use_count: number;
         }>;
-      }>(`/suggestions${limit ? `?limit=${limit}` : ''}`),
+      }>(`/suggestions${qs ? `?${qs}` : ''}`);
+    },
   },
 };
