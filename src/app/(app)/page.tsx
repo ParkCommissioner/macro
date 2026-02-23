@@ -141,9 +141,9 @@ export default function TodayPage() {
         <h1 className="text-xl font-bold text-[var(--text-primary)]">
           {data?.date ? formatDate(data.date) : 'today'}
         </h1>
-        <p className="text-sm text-[var(--text-muted)]">
+        <p className="text-sm text-[var(--text-secondary)]">
           {data?.entry_count === 0
-            ? 'no meals logged yet'
+            ? 'No meals logged yet'
             : `${data?.entry_count} ${data?.entry_count === 1 ? 'meal' : 'meals'} logged`}
         </p>
       </motion.div>
@@ -206,7 +206,7 @@ export default function TodayPage() {
           {/* Today's Entries */}
           {data.entries.length > 0 && (
             <div>
-              <h2 className="section-header mb-3">meals</h2>
+              <h2 className="section-header mb-3">Meals</h2>
               <div className="space-y-3">
                 {data.entries.map((entry, i) => (
                   <motion.div

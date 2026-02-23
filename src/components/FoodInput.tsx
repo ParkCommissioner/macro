@@ -29,7 +29,7 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
         const data = await api.suggestions.list(5);
         setSuggestions(data.suggestions);
       } catch {
-        // Ignore errors loading suggestions
+        // Ignore
       }
     };
     loadSuggestions();
@@ -37,7 +37,6 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
 
   const handleSubmit = async (text: string = value) => {
     if (!text.trim() || isSubmitting) return;
-
     setIsSubmitting(true);
     setError(null);
     setShowSuggestions(false);
@@ -46,7 +45,6 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
       await api.entries.create(text.trim());
       setValue('');
       onEntryCreated?.();
-      // Refresh suggestions
       const data = await api.suggestions.list(5);
       setSuggestions(data.suggestions);
     } catch (err) {
@@ -65,132 +63,84 @@ export function FoodInput({ onEntryCreated }: FoodInputProps) {
 
   return (
     <div className="relative w-full">
-      {/* Terminal-style input container */}
-      <motion.div
-        className={`relative overflow-hidden rounded-lg border transition-all duration-150 ${
+      <div
+        className={`flex items-center gap-3 rounded-2xl border bg-[var(--bg-elevated)] px-4 py-3 transition-all duration-200 ${
           isFocused
-            ? 'border-[var(--accent)] glow'
+            ? 'border-[var(--accent)] shadow-[0_0_0_3px_var(--accent-subtle)]'
             : 'border-[var(--bg-overlay)]'
         }`}
-        animate={isFocused ? { scale: 1.01 } : { scale: 1 }}
-        transition={{ duration: 0.15 }}
       >
-        {/* Input header bar */}
-        <div className="flex items-center gap-2 border-b border-[var(--bg-overlay)] bg-[var(--bg-elevated)] px-4 py-2">
-          <div className="flex gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-full bg-[var(--fat)] opacity-80" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[var(--carbs)] opacity-80" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[var(--accent)] opacity-80" />
-          </div>
-          <span className="text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
-            food input
-          </span>
-        </div>
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => { setIsFocused(true); setShowSuggestions(true); }}
+          onBlur={() => { setIsFocused(false); setTimeout(() => setShowSuggestions(false), 200); }}
+          placeholder="What did you eat?"
+          disabled={isSubmitting}
+          className="flex-1 bg-transparent text-[15px] text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none disabled:opacity-50"
+        />
 
-        {/* Input field area */}
-        <div className="relative flex items-center bg-[var(--bg-base)]">
-          {/* Prompt symbol */}
-          <span className="pl-4 text-lg text-[var(--accent)]">$</span>
-
-          <input
-            ref={inputRef}
-            type="text"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => {
-              setIsFocused(true);
-              setShowSuggestions(true);
-            }}
-            onBlur={() => {
-              setIsFocused(false);
-              setTimeout(() => setShowSuggestions(false), 200);
-            }}
-            placeholder="type what you ate..."
-            disabled={isSubmitting}
-            className="flex-1 bg-transparent py-4 pl-2 pr-4 text-base text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none disabled:opacity-50"
-          />
-
-          {/* Blinking cursor when empty and focused */}
-          {isFocused && !value && (
-            <motion.span
-              className="absolute left-[52px] text-[var(--accent)]"
-              animate={{ opacity: [1, 0] }}
-              transition={{ duration: 0.8, repeat: Infinity, repeatType: 'reverse' }}
-            >
-              _
-            </motion.span>
+        <motion.button
+          onClick={() => handleSubmit()}
+          disabled={!value.trim() || isSubmitting}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] text-white transition-all hover:bg-[var(--accent-bright)] disabled:bg-[var(--bg-overlay)] disabled:text-[var(--text-muted)]"
+          whileTap={{ scale: 0.92 }}
+        >
+          {isSubmitting ? (
+            <motion.div
+              className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+            />
+          ) : (
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           )}
+        </motion.button>
+      </div>
 
-          {/* Submit button */}
-          <motion.button
-            onClick={() => handleSubmit()}
-            disabled={!value.trim() || isSubmitting}
-            className="mr-2 flex h-10 w-10 items-center justify-center rounded-md bg-[var(--accent)] text-[var(--bg-base)] transition-all hover:bg-[var(--accent-bright)] disabled:bg-[var(--bg-overlay)] disabled:text-[var(--text-muted)]"
-            whileTap={{ scale: 0.95 }}
-          >
-            {isSubmitting ? (
-              <motion.svg
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </motion.svg>
-            ) : (
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            )}
-          </motion.button>
-        </div>
-      </motion.div>
-
-      {/* Suggestions dropdown */}
+      {/* Suggestions */}
       <AnimatePresence>
         {showSuggestions && suggestions.length > 0 && !value && (
           <motion.div
-            initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
-            animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-lg border border-[var(--bg-overlay)] bg-[var(--bg-elevated)]"
-            style={{ transformOrigin: 'top' }}
+            className="absolute left-0 right-0 top-full z-10 mt-2 overflow-hidden rounded-xl border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] shadow-xl"
           >
-            <div className="section-header px-4 py-2">
-              recent entries
+            <div className="px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+              Recent
             </div>
             {suggestions.map((suggestion, i) => (
-              <motion.button
+              <button
                 key={i}
                 onClick={() => handleSubmit(suggestion.raw_text)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-[var(--bg-overlay)]"
-                whileHover={{ x: 4 }}
-                transition={{ duration: 0.1 }}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-[var(--bg-overlay)]"
               >
-                <span className="text-[var(--accent)]">$</span>
                 <span className="flex-1 truncate text-[var(--text-primary)]">{suggestion.raw_text}</span>
-                <span className="tabular-nums text-xs text-[var(--text-muted)]">{suggestion.use_count}x</span>
-              </motion.button>
+                <span className="tabular-nums text-xs text-[var(--text-muted)]">{suggestion.use_count}×</span>
+              </button>
             ))}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Error message */}
+      {/* Error */}
       <AnimatePresence>
         {error && (
-          <motion.div
+          <motion.p
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="mt-2 flex items-center gap-2 text-sm text-[var(--error)]"
+            className="mt-2 text-sm text-[var(--error)]"
           >
-            <span className="text-[var(--error)]">!</span>
-            <span>{error}</span>
-          </motion.div>
+            {error}
+          </motion.p>
         )}
       </AnimatePresence>
     </div>

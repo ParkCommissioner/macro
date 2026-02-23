@@ -42,11 +42,11 @@ const RANGES = [
   { label: '30d', days: 30 },
 ];
 
-const MACRO_COLORS = {
-  protein: 'var(--protein)',
-  carbs: 'var(--carbs)',
-  fat: 'var(--fat)',
-};
+const MACROS = [
+  { key: 'protein', label: 'Protein', color: '#60a5fa' },
+  { key: 'carbs', label: 'Carbs', color: '#fbbf24' },
+  { key: 'fat', label: 'Fat', color: '#f87171' },
+] as const;
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -54,32 +54,32 @@ function formatDate(dateStr: string): string {
 }
 
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) {
-  if (!active || !payload) return null;
+  if (!active || !payload || !payload.length) return null;
 
   return (
-    <div className="rounded-md border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] p-3 shadow-xl">
-      <p className="mb-2 text-[10px] uppercase tracking-wider text-[var(--text-muted)]">{formatDate(label || '')}</p>
+    <div className="rounded-lg border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] p-3 shadow-2xl">
+      <p className="mb-1.5 text-xs font-medium text-[var(--text-secondary)]">{formatDate(label || '')}</p>
       {payload.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2 text-xs">
-          <div className="h-1.5 w-1.5 rounded-sm" style={{ backgroundColor: entry.color, boxShadow: `0 0 4px ${entry.color}` }} />
-          <span className="text-[var(--text-secondary)]">{entry.name}:</span>
-          <span className="font-medium tabular-nums text-[var(--text-primary)]">{Math.round(entry.value)}</span>
+        <div key={index} className="flex items-center gap-2 py-0.5 text-xs">
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-[var(--text-secondary)]">{entry.name}</span>
+          <span className="ml-auto font-semibold tabular-nums text-[var(--text-primary)]">{Math.round(entry.value)}g</span>
         </div>
       ))}
     </div>
   );
 }
 
-function LoadingSkeleton() {
+function CaloriesTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) {
+  if (!active || !payload || !payload.length) return null;
+  const mid = payload.find(p => p.name === 'calories');
+
   return (
-    <div className="space-y-6">
-      <div className="flex gap-2">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-8 w-14 rounded-md skeleton" />
-        ))}
-      </div>
-      <div className="h-56 rounded-lg skeleton" />
-      <div className="h-56 rounded-lg skeleton" />
+    <div className="rounded-lg border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] p-3 shadow-2xl">
+      <p className="mb-1 text-xs font-medium text-[var(--text-secondary)]">{formatDate(label || '')}</p>
+      {mid && (
+        <p className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">{Math.round(mid.value)} kcal</p>
+      )}
     </div>
   );
 }
@@ -89,6 +89,20 @@ export default function HistoryPage() {
   const [data, setData] = useState<HistoryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeMacros, setActiveMacros] = useState<Set<string>>(new Set(['protein']));
+  const [stacked, setStacked] = useState(false);
+
+  const toggleMacro = (key: string) => {
+    setActiveMacros(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        if (next.size > 1) next.delete(key); // keep at least one
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -107,7 +121,6 @@ export default function HistoryPage() {
     loadData();
   }, [loadData]);
 
-  // Transform data for charts (reverse so oldest is first)
   const chartData = data?.days
     .slice()
     .reverse()
@@ -129,207 +142,164 @@ export default function HistoryPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="text-xl font-bold text-[var(--text-primary)]">history</h1>
-        <p className="text-sm text-[var(--text-muted)]">nutrition trends over time</p>
+        <h1 className="text-xl font-bold text-[var(--text-primary)]">Trends</h1>
+        <p className="text-sm text-[var(--text-secondary)]">Nutrition over time</p>
       </motion.div>
 
       {/* Range Selector */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mb-6 flex gap-2"
-      >
+      <div className="mb-6 flex gap-1.5 rounded-xl bg-[var(--bg-elevated)] p-1">
         {RANGES.map((range) => (
           <button
             key={range.days}
             onClick={() => setSelectedRange(range.days)}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-all ${
+            className={`relative flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${
               selectedRange === range.days
-                ? 'bg-[var(--accent)] text-[var(--bg-base)] glow-sm'
-                : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:bg-[var(--bg-overlay)] hover:text-[var(--text-secondary)]'
+                ? 'text-[var(--text-primary)]'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
             }`}
           >
-            {range.label}
+            {selectedRange === range.days && (
+              <motion.div
+                layoutId="range-bg"
+                className="absolute inset-0 rounded-lg bg-[var(--bg-overlay)]"
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              />
+            )}
+            <span className="relative z-10">{range.label}</span>
           </button>
         ))}
-      </motion.div>
+      </div>
 
       {isLoading ? (
-        <LoadingSkeleton />
+        <div className="space-y-4">
+          <div className="h-56 skeleton" />
+          <div className="h-56 skeleton" />
+        </div>
       ) : error ? (
-        <div className="rounded-lg border border-dashed border-[var(--error)]/30 bg-[var(--error)]/5 p-4 text-center">
-          <p className="text-sm text-[var(--error)]">! {error}</p>
-          <button
-            onClick={loadData}
-            className="mt-2 text-xs text-[var(--error)] underline hover:no-underline"
-          >
-            retry
-          </button>
+        <div className="rounded-xl bg-[var(--error)]/5 p-4 text-center">
+          <p className="text-sm text-[var(--error)]">{error}</p>
+          <button onClick={loadData} className="mt-2 text-xs text-[var(--error)] underline">retry</button>
         </div>
       ) : chartData.length === 0 ? (
-        <div className="rounded-lg border border-[var(--bg-overlay)] bg-[var(--bg-elevated)] p-8 text-center">
-          <p className="text-sm text-[var(--text-secondary)]">no data for this period</p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
-            start logging meals to see trends
-          </p>
+        <div className="rounded-xl bg-[var(--bg-elevated)] p-8 text-center">
+          <p className="text-sm text-[var(--text-secondary)]">No data for this period</p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">Start logging meals to see trends</p>
         </div>
       ) : (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-5"
+          transition={{ delay: 0.1 }}
+          className="space-y-4"
         >
-          {/* Calories Chart with Confidence Bands */}
-          <div className="overflow-hidden rounded-lg border border-[var(--bg-overlay)] bg-[var(--bg-elevated)]">
-            <div className="border-b border-[var(--bg-overlay)] bg-[var(--bg-base)] px-4 py-2">
-              <h2 className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">daily calories</h2>
+          {/* Calories Chart */}
+          <div className="overflow-hidden rounded-2xl bg-[var(--bg-elevated)]">
+            <div className="px-4 pt-4 pb-1">
+              <h2 className="text-xs font-semibold text-[var(--text-secondary)]">Calories</h2>
             </div>
-            <div className="p-4">
-              <div className="h-52">
+            <div className="px-2 pb-3">
+              <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="caloriesGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                      <linearGradient id="calGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
                       </linearGradient>
-                      <linearGradient id="confidenceBand" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.02} />
-                      </linearGradient>
-                      <filter id="glow-line">
-                        <feGaussianBlur stdDeviation="2" result="blur" />
-                        <feMerge>
-                          <feMergeNode in="blur" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
                     </defs>
-                    <CartesianGrid strokeDasharray="2 4" stroke="var(--bg-overlay)" opacity={0.5} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={formatDate}
-                      tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'inherit' }}
-                      axisLine={{ stroke: 'var(--bg-overlay)' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'inherit' }}
-                      axisLine={{ stroke: 'var(--bg-overlay)' }}
-                      tickLine={false}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    {/* Confidence band (min to max) */}
-                    <Area
-                      type="monotone"
-                      dataKey="caloriesMax"
-                      stroke="none"
-                      fill="url(#confidenceBand)"
-                      name="max"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="caloriesMin"
-                      stroke="none"
-                      fill="var(--bg-base)"
-                      name="min"
-                    />
-                    {/* Mid line */}
-                    <Area
-                      type="monotone"
-                      dataKey="caloriesMid"
-                      stroke="var(--accent)"
-                      strokeWidth={2}
-                      fill="url(#caloriesGradient)"
-                      name="calories"
-                      filter="url(#glow-line)"
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-overlay)" opacity={0.4} vertical={false} />
+                    <XAxis dataKey="date" tickFormatter={formatDate}
+                      tick={{ fill: '#52525b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#52525b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CaloriesTooltip />} />
+                    <Area type="monotone" dataKey="caloriesMid" stroke="var(--accent)" strokeWidth={2}
+                      fill="url(#calGrad)" name="calories" dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
 
-          {/* Macros Stacked Area Chart */}
-          <div className="overflow-hidden rounded-lg border border-[var(--bg-overlay)] bg-[var(--bg-elevated)]">
-            <div className="border-b border-[var(--bg-overlay)] bg-[var(--bg-base)] px-4 py-2">
-              <h2 className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">macronutrients</h2>
+          {/* Macros Chart */}
+          <div className="overflow-hidden rounded-2xl bg-[var(--bg-elevated)]">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+              <h2 className="text-xs font-semibold text-[var(--text-secondary)]">Macros</h2>
+              <button
+                onClick={() => setStacked(!stacked)}
+                className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
+                  stacked
+                    ? 'bg-[var(--accent-subtle)] text-[var(--accent-bright)]'
+                    : 'bg-[var(--bg-overlay)] text-[var(--text-muted)]'
+                }`}
+              >
+                {stacked ? 'Stacked' : 'Layered'}
+              </button>
             </div>
-            <div className="p-4">
-              <div className="h-52">
+
+            {/* Macro toggles */}
+            <div className="flex gap-2 px-4 pb-2">
+              {MACROS.map((macro) => {
+                const isOn = activeMacros.has(macro.key);
+                return (
+                  <button
+                    key={macro.key}
+                    onClick={() => toggleMacro(macro.key)}
+                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                      isOn
+                        ? 'bg-opacity-100'
+                        : 'opacity-40'
+                    }`}
+                    style={{
+                      backgroundColor: isOn ? `${macro.color}18` : 'var(--bg-overlay)',
+                      color: isOn ? macro.color : 'var(--text-muted)',
+                    }}
+                  >
+                    <div
+                      className="h-2 w-2 rounded-full transition-transform"
+                      style={{
+                        backgroundColor: macro.color,
+                        transform: isOn ? 'scale(1)' : 'scale(0.6)',
+                        opacity: isOn ? 1 : 0.4,
+                      }}
+                    />
+                    {macro.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="px-2 pb-3">
+              <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="proteinGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={MACRO_COLORS.protein} stopOpacity={0.7} />
-                        <stop offset="95%" stopColor={MACRO_COLORS.protein} stopOpacity={0.1} />
-                      </linearGradient>
-                      <linearGradient id="carbsGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={MACRO_COLORS.carbs} stopOpacity={0.7} />
-                        <stop offset="95%" stopColor={MACRO_COLORS.carbs} stopOpacity={0.1} />
-                      </linearGradient>
-                      <linearGradient id="fatGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={MACRO_COLORS.fat} stopOpacity={0.7} />
-                        <stop offset="95%" stopColor={MACRO_COLORS.fat} stopOpacity={0.1} />
-                      </linearGradient>
+                      {MACROS.map((macro) => (
+                        <linearGradient key={macro.key} id={`${macro.key}Grad`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={macro.color} stopOpacity={stacked ? 0.6 : 0.2} />
+                          <stop offset="100%" stopColor={macro.color} stopOpacity={0} />
+                        </linearGradient>
+                      ))}
                     </defs>
-                    <CartesianGrid strokeDasharray="2 4" stroke="var(--bg-overlay)" opacity={0.5} />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={formatDate}
-                      tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'inherit' }}
-                      axisLine={{ stroke: 'var(--bg-overlay)' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'inherit' }}
-                      axisLine={{ stroke: 'var(--bg-overlay)' }}
-                      tickLine={false}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-overlay)" opacity={0.4} vertical={false} />
+                    <XAxis dataKey="date" tickFormatter={formatDate}
+                      tick={{ fill: '#52525b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#52525b', fontSize: 10 }} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Area
-                      type="monotone"
-                      dataKey="protein"
-                      stackId="1"
-                      stroke={MACRO_COLORS.protein}
-                      fill="url(#proteinGradient)"
-                      name="protein (g)"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="carbs"
-                      stackId="1"
-                      stroke={MACRO_COLORS.carbs}
-                      fill="url(#carbsGradient)"
-                      name="carbs (g)"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="fat"
-                      stackId="1"
-                      stroke={MACRO_COLORS.fat}
-                      fill="url(#fatGradient)"
-                      name="fat (g)"
-                    />
+                    {MACROS.filter(m => activeMacros.has(m.key)).map((macro) => (
+                      <Area
+                        key={macro.key}
+                        type="monotone"
+                        dataKey={macro.key}
+                        stackId={stacked ? 'macros' : undefined}
+                        stroke={macro.color}
+                        strokeWidth={2}
+                        fill={`url(#${macro.key}Grad)`}
+                        name={macro.label}
+                        dot={false}
+                      />
+                    ))}
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
-              {/* Legend */}
-              <div className="mt-3 flex justify-center gap-5">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-sm" style={{ backgroundColor: MACRO_COLORS.protein, boxShadow: `0 0 4px ${MACRO_COLORS.protein}` }} />
-                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">protein</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-sm" style={{ backgroundColor: MACRO_COLORS.carbs, boxShadow: `0 0 4px ${MACRO_COLORS.carbs}` }} />
-                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">carbs</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-sm" style={{ backgroundColor: MACRO_COLORS.fat, boxShadow: `0 0 4px ${MACRO_COLORS.fat}` }} />
-                  <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">fat</span>
-                </div>
               </div>
             </div>
           </div>
